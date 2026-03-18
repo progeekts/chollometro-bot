@@ -1,20 +1,24 @@
-name: Chollometro 300 Grados
+name: Chollometro Prueba
 on:
+  workflow_dispatch: # Botón manual
   schedule:
-    - cron: '*/10 * * * *' # Se ejecuta cada 10 minutos
-  workflow_dispatch: # Botón para probar manualmente
+    - cron: '*/10 * * * *'
+
+env:
+  # Esto quita el aviso de Node.js 20 de una vez por todas
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # Actualizado de v3 a v4
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v5 # Actualizado de v4 a v5
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11' # Especificamos versión de Python
 
       - name: Install dependencies
         run: pip install feedparser requests
@@ -29,6 +33,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add vistos.txt
-          # El '|| exit 0' evita que el proceso falle si no hay nuevos chollos que guardar
-          git commit -m "Actualizar historial de chollos [skip ci]" || exit 0
+          git commit -m "Actualizar historial [skip ci]" || exit 0
           git push
