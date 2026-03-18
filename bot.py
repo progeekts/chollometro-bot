@@ -2,6 +2,7 @@ import feedparser
 import requests
 import re
 import os
+import time
 
 # --- Configuración ---
 RSS_URL = "https://www.chollometro.com/rss/nuevos" # Usamos nuevos para captarlos todos
@@ -64,6 +65,7 @@ for entry in reversed(feed.entries):
         
         try:
             response = requests.post(WEBHOOK_URL, json=datos_webhook)
+            time.sleep(1.2)
             if response.status_code == 204:
                 print(f"Enviado con éxito: {titulo_limpio}")
                 # Solo añadimos a vistos si se envió correctamente
