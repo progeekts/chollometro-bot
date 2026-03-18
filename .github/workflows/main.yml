@@ -1,18 +1,18 @@
 name: Chollometro 300 Grados
 on:
   schedule:
-    - cron: '*/10 * * * *' # Cada 10 min
-  workflow_dispatch:
+    - cron: '*/10 * * * *' # Se ejecuta cada 10 minutos
+  workflow_dispatch: # Botón para probar manualmente
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Actualizado de v3 a v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Actualizado de v4 a v5
         with:
           python-version: '3.x'
 
@@ -26,8 +26,9 @@ jobs:
 
       - name: Save Cache
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add vistos.txt
-          git commit -m "Actualizar historial de chollos" || exit 0
+          # El '|| exit 0' evita que el proceso falle si no hay nuevos chollos que guardar
+          git commit -m "Actualizar historial de chollos [skip ci]" || exit 0
           git push
