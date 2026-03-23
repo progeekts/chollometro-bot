@@ -9,10 +9,10 @@ RSS_URL = "https://www.chollometro.com/rss/nuevos" # Usamos nuevos para captarlo
 # Asegúrate de tener este Secret configurado en GitHub -> Settings -> Secrets and variables -> Actions
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
-MIN_TEMP = 300 # Umbral de temperatura
+MIN_TEMP = 250 # Umbral de temperatura
 
 def get_temp(title):
-    """Busca patrones como "350°" o "350º" en el título."""
+    """Busca patrones como "350º" en el título."""
     match = re.search(r"(\d+)º", title)
     if match:
         return int(match.group(1))
