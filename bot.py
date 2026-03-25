@@ -9,10 +9,10 @@ import time
 RSS_URL = "https://www.chollometro.com/rss/hot" 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
-MIN_TEMP = 250
+MIN_TEMP = 300
 
 def get_temp(title):
-    """Busca patrones como "350º" o "350°" en el título."""
+    """Busca patrones como "300º" o "350°" en el título."""
     match = re.search(r"(\d+)[º°]", title)
     if match:
         return int(match.group(1))
