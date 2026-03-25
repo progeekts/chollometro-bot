@@ -5,7 +5,7 @@ import os
 import time
 
 # --- Configuración ---
-RSS_URL = "https://www.chollometro.com/rss/hot" # Usamos nuevos para captarlos todos
+RSS_URL = "https://www.chollometro.com/rss" # Usamos nuevos para captarlos todos
 # Asegúrate de tener este Secret configurado en GitHub -> Settings -> Secrets and variables -> Actions
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
@@ -34,8 +34,17 @@ with open(CACHE_FILE, "r") as f:
     vistos = f.read().splitlines()
 
 # --- 2. Leer RSS de Chollometro ---
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
+
 try:
-    feed = feedparser.parse(RSS_URL)
+    # Primero descargamos el contenido con requests usando el User-Agent
+    response_rss = requests.get(RSS_URL, headers=headers, timeout=10)
+    response_rss.raise_for_status() # Lanza error si la web devuelve 404 o 500
+    
+    # Luego pasamos el contenido descargado a feedparser
+    feed = feedparser.parse(response_rss.content)
 except Exception as e:
     print(f"Error leyendo el RSS: {e}")
     exit(1)
