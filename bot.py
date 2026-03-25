@@ -5,7 +5,7 @@ import os
 import time
 
 # --- Configuración ---
-RSS_URL = "https://www.chollometro.com/rss/nuevos" # Usamos nuevos para captarlos todos
+RSS_URL = "https://www.chollometro.com/rss/hot" # Usamos nuevos para captarlos todos
 # Asegúrate de tener este Secret configurado en GitHub -> Settings -> Secrets and variables -> Actions
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
