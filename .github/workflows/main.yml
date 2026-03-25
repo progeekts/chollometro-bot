@@ -1,12 +1,15 @@
 name: Chollometro Prueba
 on:
-  workflow_dispatch: # Botón manual
+  workflow_dispatch:
   schedule:
     - cron: '*/10 * * * *'
 
 env:
-  # Esto quita el aviso de Node.js 20 de una vez por todas
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
+
+# ¡ESTO ES NUEVO Y NECESARIO PARA HACER EL PUSH!
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -18,7 +21,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # Especificamos versión de Python
+          python-version: '3.11'
 
       - name: Install dependencies
         run: pip install feedparser requests
