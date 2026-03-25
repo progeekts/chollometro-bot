@@ -5,32 +5,29 @@ import os
 import time
 
 # --- Configuración ---
-RSS_URL = "https://www.chollometro.com/rss/hot" # Usamos nuevos para captarlos todos
-# Asegúrate de tener este Secret configurado en GitHub -> Settings -> Secrets and variables -> Actions
+# Cambiado a 'hot' para que pueda captar chollos que realmente alcancen 250º
+RSS_URL = "https://www.chollometro.com/rss/hot" 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
-MIN_TEMP = 250 # Umbral de temperatura
+MIN_TEMP = 250
 
 def get_temp(title):
-    """Busca patrones como "350º" en el título."""
-    match = re.search(r"(\d+)º", title)
+    """Busca patrones como "350º" o "350°" en el título."""
+    match = re.search(r"(\d+)[º°]", title)
     if match:
         return int(match.group(1))
     return 0
 
 def clean_title(title):
     """Limpia el título del RSS para quitar la temperatura inicial."""
-    # Elimina patrones como "350º ", "350° ", "350 " al principio del texto
     cleaned = re.sub(r"^\d+[º°]?\s*", "", title)
     return cleaned
 
 # --- 1. Cargar IDs ya enviados (Caché) ---
 if not os.path.exists(CACHE_FILE):
-    # Crea el archivo si no existe
     with open(CACHE_FILE, "w") as f: f.write("")
 
 with open(CACHE_FILE, "r") as f:
-    # Lee todas las líneas y quita espacios en blanco
     vistos = f.read().splitlines()
 
 # --- 2. Leer RSS de Chollometro ---
@@ -39,51 +36,43 @@ headers = {
 }
 
 try:
-    # Primero descargamos el contenido con requests usando el User-Agent
     response_rss = requests.get(RSS_URL, headers=headers, timeout=10)
-    response_rss.raise_for_status() # Lanza error si la web devuelve 404 o 500
-    
-    # Luego pasamos el contenido descargado a feedparser
+    response_rss.raise_for_status() 
     feed = feedparser.parse(response_rss.content)
 except Exception as e:
     print(f"Error leyendo el RSS: {e}")
     exit(1)
 
-# Procesar desde el más antiguo al más nuevo para mantener el orden
+# Procesar desde el más antiguo al más nuevo
 for entry in reversed(feed.entries):
-    id_chollo = entry.id
+    # Usamos entry.link para que coincida exactamente con tu vistos.txt
+    id_chollo = entry.link
     temp = get_temp(entry.title)
     
-    # --- FILTRO: No visto antes Y temperatura mayor o igual a MIN_TEMP ---
+    # --- FILTRO ---
     if id_chollo not in vistos and temp >= MIN_TEMP:
-        
-        # Limpiamos el título para que no se repita la temperatura
         titulo_limpio = clean_title(entry.title)
         
         # --- 3. Formatear y enviar a Discord ---
-        # Definimos el mensaje con el formato exacto solicitado
         mensaje_formateado = (
             f"🔥 **¡NUEVO CHOLLO!** 🔥 ({temp}º)\n\n"
             f"✨ **Producto:** {titulo_limpio}\n"
             f"🔗 **Link:** {entry.link}"
         )
         
-        datos_webhook = {
-            "content": mensaje_formateado
-        }
+        datos_webhook = {"content": mensaje_formateado}
         
         try:
             response = requests.post(WEBHOOK_URL, json=datos_webhook)
             time.sleep(1.2)
             if response.status_code == 204:
                 print(f"Enviado con éxito: {titulo_limpio}")
-                # Solo añadimos a vistos si se envió correctamente
                 vistos.append(id_chollo)
             else:
                 print(f"Error enviando a Discord: {response.status_code}, {response.text}")
         except Exception as e:
             print(f"Error de red: {e}")
 
-# --- 4. Guardar historial (limitado a los últimos 100 para no pesar mucho) ---
+# --- 4. Guardar historial ---
 with open(CACHE_FILE, "w") as f:
     f.write("\n".join(vistos[-100:]))
