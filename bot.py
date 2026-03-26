@@ -73,7 +73,7 @@ for entry in reversed(feed.entries):
                 }
             ],
             "footer": {
-                "text": "Chollometro Bot • Recién publicado"
+                "text": "Servidor para Españoles, chollito recién publicado"
             }
         }
         datos_webhook = {
