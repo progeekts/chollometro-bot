@@ -53,15 +53,32 @@ for entry in reversed(feed.entries):
     if id_chollo not in vistos and temp >= MIN_TEMP:
         titulo_limpio = clean_title(entry.title)
         
-        # --- 3. Formatear y enviar a Discord ---
-        mensaje_formateado = (
-            f"🔥 **¡NUEVO CHOLLO!** 🔥 ({temp}º)\n\n"
-            f"✨ **Producto:** {titulo_limpio}\n"
-            f"🔗 **Link:** {entry.link}"
-        )
-        
-        datos_webhook = {"content": mensaje_formateado}
-        
+        # --- 3. Formatear y enviar a Discord con Embed ---
+        titulo_limpio = clean_title(entry.title)
+        # Estructura del Embed para que se vea limpio y profesional
+        embed = {
+            "title": f"🔥 {titulo_limpio}",
+            "url": entry.link,
+            "color": 0xFF4500, # Naranja Chollometro
+            "fields": [
+                {
+                    "name": "Temperatura",
+                    "value": f"**{temp}º**",
+                    "inline": True
+                },
+                {
+                    "name": "Ir al chollo",
+                    "value": f"[Haz clic aquí]({entry.link})",
+                    "inline": True
+                }
+            ],
+            "footer": {
+                "text": "Chollometro Bot • Recién publicado"
+            }
+        }
+        datos_webhook = {
+            "embeds": [embed]
+        }
         try:
             response = requests.post(WEBHOOK_URL, json=datos_webhook)
             time.sleep(1.2)
