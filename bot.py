@@ -5,7 +5,6 @@ import os
 import time
 
 # --- Configuración ---
-# Cambiado a 'hot' para que pueda captar chollos que realmente alcancen 250º
 RSS_URL = "https://www.chollometro.com/rss/hot" 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
@@ -22,6 +21,22 @@ def clean_title(title):
     """Limpia el título del RSS para quitar la temperatura inicial."""
     cleaned = re.sub(r"^\d+[º°]?\s*", "", title)
     return cleaned
+
+def get_image(entry):
+    """Extrae la URL de la imagen del contenido del post."""
+    # Intentamos buscar en el summary (HTML) la etiqueta <img>
+    if 'summary' in entry:
+        match = re.search(r'<img [^>]*src="([^"]+)"', entry.summary)
+        if match:
+            return match.group(1)
+    return None
+
+def get_merchant(entry):
+    """Extrae el nombre de la tienda (Amazon, PcComponentes, etc)."""
+    # Chollometro usa el namespace 'pepper:merchant' en su RSS
+    if 'pepper_merchant' in entry:
+        return entry['pepper_merchant']['name']
+    return "Ver en web"
 
 # --- 1. Cargar IDs ya enviados (Caché) ---
 if not os.path.exists(CACHE_FILE):
@@ -45,43 +60,53 @@ except Exception as e:
 
 # Procesar desde el más antiguo al más nuevo
 for entry in reversed(feed.entries):
-    # Usamos entry.link para que coincida exactamente con tu vistos.txt
     id_chollo = entry.link
     temp = get_temp(entry.title)
     
     # --- FILTRO ---
     if id_chollo not in vistos and temp >= MIN_TEMP:
         titulo_limpio = clean_title(entry.title)
+        imagen_url = get_image(entry)
+        tienda = get_merchant(entry)
         
         # --- 3. Formatear y enviar a Discord con Embed ---
-        titulo_limpio = clean_title(entry.title)
-        # Estructura del Embed para que se vea limpio y profesional
         embed = {
             "title": f"🔥 {titulo_limpio}",
             "url": entry.link,
             "color": 0xFF4500, # Naranja Chollometro
             "fields": [
                 {
-                    "name": "Temperatura",
+                    "name": "🏪 Tienda",
+                    "value": f"**{tienda}**",
+                    "inline": True
+                },
+                {
+                    "name": "🌡️ Temperatura",
                     "value": f"**{temp}º**",
                     "inline": True
                 },
                 {
-                    "name": "Ir al chollo",
-                    "value": f"[Haz clic aquí]({entry.link})",
-                    "inline": True
+                    "name": "🔗 Enlace",
+                    "value": f"[Ir al chollo]({entry.link})",
+                    "inline": False
                 }
             ],
             "footer": {
                 "text": "Servidor para Españoles, chollito recién publicado"
             }
         }
+
+        # Añadimos la imagen principal si existe
+        if imagen_url:
+            embed["image"] = {"url": imagen_url}
+
         datos_webhook = {
             "embeds": [embed]
         }
+
         try:
             response = requests.post(WEBHOOK_URL, json=datos_webhook)
-            time.sleep(1.2)
+            time.sleep(1.2) # Respetar rate limits de Discord
             if response.status_code == 204:
                 print(f"Enviado con éxito: {titulo_limpio}")
                 vistos.append(id_chollo)
