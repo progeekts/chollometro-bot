@@ -8,7 +8,7 @@ import time
 RSS_URL = "https://www.chollometro.com/rss/hot" 
 WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK") 
 CACHE_FILE = "vistos.txt"
-MIN_TEMP = 350
+MIN_TEMP = 300
 
 def get_temp(title):
     match = re.search(r"(\d+)[º°]", title)
