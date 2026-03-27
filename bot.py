@@ -37,6 +37,16 @@ def get_merchant(entry):
         return entry['pepper_merchant']['name']
     return "Tienda desconocida"
 
+def get_direct_link(entry):
+    """Extrae el enlace directo a la tienda desde el feed."""
+    # Chollometro suele ponerlo en entry.link, pero para ir directo 
+    # a veces necesitamos buscar la redirección en los parámetros del feed
+    if 'link' in entry:
+        # La mayoría de veces el RSS permite obtener el link de salida 
+        # Si quieres el link que salta el aviso de Chollometro:
+        return entry.link.replace("/ofertas/", "/visit/threaddesc/")
+    return entry.link
+
 # --- 1. Cargar IDs ---
 if not os.path.exists(CACHE_FILE):
     with open(CACHE_FILE, "w") as f: f.write("")
@@ -72,22 +82,24 @@ for entry in reversed(feed.entries):
         continue
 
     # Si pasa los filtros, preparamos el envío
-    precio = get_price(entry.title)
-    titulo_limpio = clean_title(entry.title)
-    imagen_url = get_image(entry)
-    tienda = get_merchant(entry)
+enlace_directo = id_chollo.replace("/ofertas/", "/visit/threaddesc/")
+        
+        precio = get_price(entry.title)
+        titulo_limpio = clean_title(entry.title)
+        imagen_url = get_image(entry)
+        tienda = get_merchant(entry)
     
     # --- DISEÑO ORDENADO ---
-    embed = {
-        "title": f"✨ {titulo_limpio}",
-        "url": entry.link,
-        "color": 0x2F3136,
-        "fields": [
-            {"name": "🌡️ Temperatura", "value": f"**{temp}º**", "inline": True},
-            {"name": "💰 Precio", "value": f"**{precio}**", "inline": True},
-            {"name": "🏪 Tienda", "value": f"**{tienda}**", "inline": True},
-            {"name": "🔗 Enlace", "value": f"[Ir al chollo]({entry.link})", "inline": False}
-        ],
+   embed = {
+            "title": f"✨ {titulo_limpio}",
+            "url": enlace_directo, # Título ahora lleva a la tienda
+            "color": 0x2F3136,
+            "fields": [
+                {"name": "🌡️ Temperatura", "value": f"**{temp}º**", "inline": True},
+                {"name": "💰 Precio", "value": f"**{precio}**", "inline": True},
+                {"name": "🏪 Tienda", "value": f"**{tienda}**", "inline": True},
+                {"name": "🔗 Enlace Directo", "value": f"[Ir a la tienda]({enlace_directo})", "inline": False}
+            ],
         "footer": {"text": "Servidor para Españoles, chollito recién publicado"},
         "timestamp": time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     }
